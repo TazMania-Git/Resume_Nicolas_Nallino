@@ -14,13 +14,13 @@ parallel = true
 lint = true
 
 [default.deploy.parameters]
-stack_name = "resume-nicolas-nallino"
 resolve_s3 = true
 s3_prefix = "resume-nicolas-nallino"
 region = "us-west-2"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
+disable_rollback = false
 
 [default.package.parameters]
 resolve_s3 = true
