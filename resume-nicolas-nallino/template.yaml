@@ -1,70 +1,88 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-    resume-nicolas-nallino
-
-    Powertools for AWS Lambda (Python) example
-
+  resume-nicolas-nallino #magic___^_^___line Powertools for AWS Lambda (Python) example #magic___^_^___line
 Globals: # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy-globals.html
-    Function:
-        Timeout: 5
-        MemorySize: 128
-        Runtime: python3.10
+  Function:
+    Timeout: 5
+    MemorySize: 128
+    Runtime: python3.10
 
 Resources:
-    MyWebsite:
-        Type: AWS::S3::Bucket
-        Properties:
-            AccessControl: PublicRead
-            WebsiteConfiguration:
-                IndexDocument: index.html
-            BucketName: resume-fnn-website
-    BucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        PolicyDocument:
-          Id: MyPolicy
-          Version: 2012-10-17
-          Statement:
-            - Sid: PublicReadForGetBucketObjects
-              Effect: Allow
-              Principal: "*"
-              Action: "s3:GetObject"
-              Resource: !Join
-                - ""
-                - - "arn:aws:s3:::"
-                  - !Ref MyWebsite
-                  - /*
-        Bucket: !Ref MyWebsite
-    HelloWorldFunction:
-        Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
-        Properties:
-            Handler: app.lambda_handler
-            CodeUri: hello_world
-            Description: Hello World function
-            Architectures:
-                - x86_64
-            Tracing: Active
-            Events:
-                HelloPath:
-                    Type: Api # More info about API Event Source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-function-api.html
-                    Properties:
-                        Path: /hello
-                        Method: GET
-                # Powertools for AWS Lambda (Python) env vars: https://awslabs.github.io/aws-lambda-powertools-python/#environment-variables
-            Environment:
-                Variables:
-                    POWERTOOLS_SERVICE_NAME: PowertoolsHelloWorld
-                    POWERTOOLS_METRICS_NAMESPACE: Powertools
-                    LOG_LEVEL: INFO
-            Tags:
-                LambdaPowertools: python
+  MyWebsite:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      BucketName: resume-fnn-website
+
+  MyDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          ViewerProtocolPolicy: allow-all
+          TargetOriginId: resume-fnn-website.s3-website-us-west-2.amazonaws.com
+          DefaultTTL: 0
+          MinTTL: 0
+          MaxTTL: 0
+          ForwardedValues:
+            QueryString: false
+        Origins:
+        - DomainName: resume-fnn-website.s3-website-us-west-2.amazonaws.com
+          Id: resume-fnn-website.s3-website-us-west-2.amazonaws.com
+          CustomOriginConfig:
+            OriginProtocolPolicy: match-viewer
+        Enabled: "true"
+        DefaultRootObject: index.html
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: MyPolicy
+        Version: 2012-10-17
+        Statement:
+        - Sid: PublicReadForGetBucketObjects
+          Effect: Allow
+          Principal: "*"
+          Action: "s3:GetObject"
+          Resource: !Join
+          - ""
+          - - "arn:aws:s3:::"
+            - !Ref MyWebsite
+            - /*
+      Bucket: !Ref MyWebsite
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      Handler: app.lambda_handler
+      CodeUri: hello_world
+      Description: Hello World function
+      Architectures:
+      - x86_64
+      Tracing: Active
+      Events:
+        HelloPath:
+          Type: Api # More info about API Event Source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-function-api.html
+          Properties:
+            Path: /hello
+            Method: GET
+            # Powertools for AWS Lambda (Python) env vars: https://awslabs.github.io/aws-lambda-powertools-python/#environment-variables
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: PowertoolsHelloWorld
+          POWERTOOLS_METRICS_NAMESPACE: Powertools
+          LOG_LEVEL: INFO
+      Tags:
+        LambdaPowertools: python
 
 Outputs:
-    HelloWorldApi:
-        Description: "API Gateway endpoint URL for Prod environment for Hello World Function"
-        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod environment for Hello World Function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"
 
-    HelloWorldFunction:
-        Description: "Hello World Lambda Function ARN"
-        Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
